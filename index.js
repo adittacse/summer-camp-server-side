@@ -5,7 +5,7 @@ const jwt = require('jsonwebtoken');
 const cors = require("cors");
 const stripe = require("stripe")(process.env.PAYMENT_SECRET_KEY);
 const port = process.env.PORT || 3000;
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 
 // middleware
 app.use(cors());
@@ -82,7 +82,29 @@ async function run() {
         res.send(result);
     });
 
-    // step-3: get specific user by email
+    // step-2: checking e user role admin or not
+    // security layer: verifyJWT
+    // email same
+    // check admin
+    app.get("/users/student/:email", verifyJWT, async (req, res) => {
+        const email = req.params.email;
+        if (req.decoded.email !== email) {
+            res.send({ admin: false });
+        }
+  
+        const query = { email: email };
+        const user = await userCollection.findOne(query);
+        const result = { admin: user?.role === "Student" };
+        res.send(result);
+    });
+
+    // step-3: get all users
+    app.get("/users", verifyJWT, verifyAdmin, async (req, res) => {
+        const result = await userCollection.find().toArray();
+        res.send(result);
+      });
+
+    // step-4: get specific user by email
     app.get("/users/:email", async (req, res) => {
         const email = req.params.email;
         const query = { email: email };
@@ -100,6 +122,14 @@ async function run() {
             return res.send({ message: "User already exist!" });
         }
         const result = await userCollection.insertOne(user);
+        res.send(result);
+    });
+
+    // step-5: delete an user
+    app.delete("/users/:id", async (req, res) => {
+        const id = req.params.id;
+        const query = { _id: new ObjectId(id) };
+        const result = await userCollection.deleteOne(query);
         res.send(result);
     });
 
