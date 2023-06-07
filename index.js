@@ -11,6 +11,23 @@ const { MongoClient, ServerApiVersion } = require('mongodb');
 app.use(cors());
 app.use(express.json());
 
+const verifyJWT = (req, res, next) => {
+    const authorization = req.headers.authorization;
+    if (!authorization) {
+      return res.status(401).send({ error: true, message: "Unauthorized Access" });
+    }
+    // bearer token
+    const token = authorization.split(" ")[1];
+  
+    jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
+      if (err) {
+        return res.status(403).send({ error: true, message: "Unauthorized Access" });
+      }
+      req.decoded = decoded;
+      next();
+    })
+  }
+
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.gkaujxr.mongodb.net/?retryWrites=true&w=majority`;
 
@@ -30,7 +47,48 @@ async function run() {
 
     const userCollection = client.db("tranquilZenDB").collection("users");
 
+    app.post("/jwt", (req, res) => {
+        const user = req.body;
+        const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: "10h" });
+        res.send({ token });
+      });
+  
+      // warning: use verifyJWT before using verifyAdmin
+      const verifyAdmin = async (req, res, next) => {
+        const email = req.decoded.email;
+        const query = { email: email };
+        const user = await userCollection.findOne(query);
+        if (user?.role !== "admin") {
+          return res.status(403).send({ error: true, message: "forbidden message" });
+        }
+        next();
+      }
+
     // users related api
+
+    // step-2: checking e user role admin or not
+    // security layer: verifyJWT
+    // email same
+    // check admin
+    app.get("/users/admin/:email", verifyJWT, async (req, res) => {
+        const email = req.params.email;
+        if (req.decoded.email !== email) {
+            res.send({ admin: false });
+        }
+  
+        const query = { email: email };
+        const user = await userCollection.findOne(query);
+        const result = { admin: user?.role === "admin" };
+        res.send(result);
+    });
+
+    // step-3: get specific user by email
+    app.get("/users/:email", async (req, res) => {
+        const email = req.params.email;
+        const query = { email: email };
+        const result = await userCollection.findOne(query);
+        res.send(result);
+    });
 
     // step-1: insert user name, email, role to mongoDB
     // before insert check existing or not
