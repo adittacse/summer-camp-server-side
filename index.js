@@ -134,6 +134,12 @@ async function run() {
 
     // class related api
 
+    // step-2: getting all classes from mongodb to display in client side
+    app.get("/class", verifyJWT, verifyAdmin, async (req, res) => {
+        const result = await classCollection.find().toArray();
+        res.send(result);
+    });
+
     // step-1: uploading new class
     app.post("/class", verifyJWT, verifyInstructor, async (req, res) => {
         const newClass = req.body;
