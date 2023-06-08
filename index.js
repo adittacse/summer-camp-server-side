@@ -43,26 +43,38 @@ const client = new MongoClient(uri, {
 async function run() {
   try {
     // Connect the client to the server	(optional starting in v4.7)
-    await client.connect();
+    // await client.connect();
 
     const userCollection = client.db("tranquilZenDB").collection("users");
+    const classCollection = client.db("tranquilZenDB").collection("class");
 
     app.post("/jwt", (req, res) => {
         const user = req.body;
         const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: "10h" });
         res.send({ token });
-      });
-  
-      // warning: use verifyJWT before using verifyAdmin
-      const verifyAdmin = async (req, res, next) => {
+    });
+    
+    // warning: use verifyJWT before using verifyAdmin
+    const verifyAdmin = async (req, res, next) => {
         const email = req.decoded.email;
         const query = { email: email };
         const user = await userCollection.findOne(query);
         if (user?.role !== "Admin") {
-          return res.status(403).send({ error: true, message: "forbidden message" });
+            return res.status(403).send({ error: true, message: "forbidden message" });
         }
         next();
-      }
+    }
+
+    // warning: use verifyJWT before using verifyInstructor
+    const verifyInstructor = async (req, res, next) => {
+        const email = req.decoded.email;
+        const query = { email: email };
+        const user = await userCollection.findOne(query);
+        if (user?.role !== "Instructor") {
+            return res.status(403).send({ error: true, message: "forbidden message" });
+        }
+        next();
+    }
 
     // users related api
 
@@ -70,7 +82,7 @@ async function run() {
     app.get("/users", async (req, res) => {
         const result = await userCollection.find().toArray();
         res.send(result);
-      });
+    });
 
     // step-3: get specific user by email
     app.get("/users/:email", async (req, res) => {
@@ -118,6 +130,18 @@ async function run() {
         const result = await userCollection.updateOne(filter, updateDoc);
         res.send(result);
     });
+
+
+    // class related api
+
+    // step-1: uploading new class
+    app.post("/class", verifyJWT, verifyInstructor, async (req, res) => {
+        const newClass = req.body;
+        console.log(newClass);
+        const result = await classCollection.insertOne(newClass);
+        res.send(result);
+    });
+
 
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
