@@ -135,8 +135,16 @@ async function run() {
     // class related api
 
     // step-2: getting all classes from mongodb to display in client side
-    app.get("/class", verifyJWT, verifyAdmin, async (req, res) => {
+    app.get("/class", verifyJWT, async (req, res) => {
         const result = await classCollection.find().toArray();
+        res.send(result);
+    });
+
+    // step-6: getting specific class
+    app.get("/class/:id", async (req, res) => {
+        const id = req.params.id;
+        const filter = { _id: new ObjectId(id) };
+        const result = await classCollection.findOne(filter);
         res.send(result);
     });
 
@@ -174,7 +182,7 @@ async function run() {
         res.send(result);
     });
 
-    // step-5: feedback a class
+    // step-5: update feedback of a class
     app.patch("/class/feedback/:id", verifyJWT, verifyAdmin, async (req, res) => {
         const id = req.params.id;
         const filter = { _id: new ObjectId(id) };
@@ -183,6 +191,24 @@ async function run() {
         const updatedClass = {
           $set: {
             feedback: updatedFeedback.feedback
+          }
+        };
+        const result = await classCollection.updateOne(filter, updatedClass, options);
+        res.send(result);
+    });
+
+    // step-7: update a product
+    app.patch("/class/update-class/:id", verifyJWT, verifyInstructor, async (req, res) => {
+        const id = req.params.id;
+        const filter = { _id: new ObjectId(id) };
+        const options = { upsert: true };
+        const updatedData = req.body;
+        const updatedClass = {
+          $set: {
+            className: updatedData.className,
+            seats: updatedData.seats,
+            price: updatedData.price,
+            image: updatedData.image
           }
         };
         const result = await classCollection.updateOne(filter, updatedClass, options);
