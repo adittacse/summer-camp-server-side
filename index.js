@@ -148,6 +148,19 @@ async function run() {
         res.send(result);
     });
 
+    // step-3: approving a class
+    app.patch("/class/approve/:id", verifyJWT, verifyAdmin, async (req, res) => {
+        const id = req.params.id;
+        const filter = { _id: new ObjectId(id) };
+        const updateDoc = {
+          $set: {
+            status: "Approved"
+          },
+        };
+        const result = await classCollection.updateOne(filter, updateDoc);
+        res.send(result);
+    });
+
 
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
