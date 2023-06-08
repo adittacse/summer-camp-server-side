@@ -174,6 +174,21 @@ async function run() {
         res.send(result);
     });
 
+    // step-5: feedback a class
+    app.patch("/class/feedback/:id", verifyJWT, verifyAdmin, async (req, res) => {
+        const id = req.params.id;
+        const filter = { _id: new ObjectId(id) };
+        const options = { upsert: true };
+        const updatedFeedback = req.body;
+        const updatedClass = {
+          $set: {
+            feedback: updatedFeedback.feedback
+          }
+        };
+        const result = await classCollection.updateOne(filter, updatedClass, options);
+        res.send(result);
+    });
+
 
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
