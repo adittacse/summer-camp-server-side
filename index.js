@@ -58,7 +58,7 @@ async function run() {
         const email = req.decoded.email;
         const query = { email: email };
         const user = await userCollection.findOne(query);
-        if (user?.role !== "admin") {
+        if (user?.role !== "Admin") {
           return res.status(403).send({ error: true, message: "forbidden message" });
         }
         next();
@@ -66,45 +66,13 @@ async function run() {
 
     // users related api
 
-    // step-2: checking e user role admin or not
-    // security layer: verifyJWT
-    // email same
-    // check admin
-    app.get("/users/admin/:email", verifyJWT, async (req, res) => {
-        const email = req.params.email;
-        if (req.decoded.email !== email) {
-            res.send({ admin: false });
-        }
-  
-        const query = { email: email };
-        const user = await userCollection.findOne(query);
-        const result = { admin: user?.role === "admin" };
-        res.send(result);
-    });
-
-    // step-2: checking e user role admin or not
-    // security layer: verifyJWT
-    // email same
-    // check admin
-    app.get("/users/student/:email", verifyJWT, async (req, res) => {
-        const email = req.params.email;
-        if (req.decoded.email !== email) {
-            res.send({ admin: false });
-        }
-  
-        const query = { email: email };
-        const user = await userCollection.findOne(query);
-        const result = { admin: user?.role === "Student" };
-        res.send(result);
-    });
-
-    // step-3: get all users
-    app.get("/users", verifyJWT, verifyAdmin, async (req, res) => {
+    // step-2: get all users
+    app.get("/users", async (req, res) => {
         const result = await userCollection.find().toArray();
         res.send(result);
       });
 
-    // step-4: get specific user by email
+    // step-3: get specific user by email
     app.get("/users/:email", async (req, res) => {
         const email = req.params.email;
         const query = { email: email };
@@ -122,14 +90,6 @@ async function run() {
             return res.send({ message: "User already exist!" });
         }
         const result = await userCollection.insertOne(user);
-        res.send(result);
-    });
-
-    // step-5: delete an user
-    app.delete("/users/:id", async (req, res) => {
-        const id = req.params.id;
-        const query = { _id: new ObjectId(id) };
-        const result = await userCollection.deleteOne(query);
         res.send(result);
     });
 
