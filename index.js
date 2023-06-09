@@ -47,6 +47,7 @@ async function run() {
 
     const userCollection = client.db("tranquilZenDB").collection("users");
     const classCollection = client.db("tranquilZenDB").collection("class");
+    const cartCollection = client.db("tranquilZenDB").collection("carts");
 
     app.post("/jwt", (req, res) => {
         const user = req.body;
@@ -248,6 +249,16 @@ async function run() {
         const result = await classCollection.updateOne(filter, updatedClass, options);
         res.send(result);
     });
+
+
+    // carts related api
+
+    // step-1: inserting a class to mongodb (student)
+    app.post("/carts", async (req, res) => {
+        const item = req.body;
+        const result = await cartCollection.insertOne(item);
+        res.send(result);
+      });
 
 
     // Send a ping to confirm a successful connection
