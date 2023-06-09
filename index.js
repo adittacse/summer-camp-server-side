@@ -92,6 +92,14 @@ async function run() {
         res.send(result);
     });
 
+    // step-6: get all instructors by role
+    app.get("/users/role/:role", async (req, res) => {
+        const role = req.params.role;
+        const query = { role: role };
+        const result = await userCollection.find(query).toArray();
+        res.send(result);
+    });
+
     // step-1: insert user name, email, role to mongoDB
     // before insert check existing or not
     app.post("/users", async (req, res) => {
@@ -135,13 +143,13 @@ async function run() {
     // class related api
 
     // step-2: getting all classes from mongodb to display in client side
-    app.get("/class", verifyJWT, async (req, res) => {
+    app.get("/class", async (req, res) => {
         const result = await classCollection.find().toArray();
         res.send(result);
     });
 
     // step-6: getting specific class
-    app.get("/class/:id", async (req, res) => {
+    app.get("/class/:id", verifyJWT, async (req, res) => {
         const id = req.params.id;
         const filter = { _id: new ObjectId(id) };
         const result = await classCollection.findOne(filter);
