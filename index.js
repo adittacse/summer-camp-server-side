@@ -94,11 +94,32 @@ async function run() {
 
     // step-6: get all instructors by role
     app.get("/users/role/:role", async (req, res) => {
-        const role = req.params.role;
-        const query = { role: role };
-        const result = await userCollection.find(query).toArray();
-        res.send(result);
+        try {
+            const role = req.params.role;
+            const query = { role: role };
+            const users = await userCollection.find(query).toArray();
+        
+            const instructors = await Promise.all(
+                users.map(async (user) => {
+                    const totalClasses = await classCollection.countDocuments({ instructorEmail: user.email });
+                    const classes = await classCollection.find({ instructorEmail: user.email }).toArray();
+                    const classNames = classes.map(eachClass => eachClass.className);
+                    return {
+                        _id: user._id,
+                        name: user.name,
+                        email: user.email,
+                        image: user.image,
+                        totalClasses,
+                        classNames,
+                    };
+                })
+            );
+            res.send(instructors);
+        } catch (error) {
+            res.status(500).send({ error: 'Internal Server Error' });
+        }
     });
+      
 
     // step-1: insert user name, email, role to mongoDB
     // before insert check existing or not
