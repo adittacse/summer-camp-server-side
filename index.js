@@ -77,6 +77,17 @@ async function run() {
         next();
     }
 
+    // warning: use verifyJWT before using verifyStudent
+    const verifyStudent = async (req, res, next) => {
+        const email = req.decoded.email;
+        const query = { email: email };
+        const user = await userCollection.findOne(query);
+        if (user?.role !== "Student") {
+            return res.status(403).send({ error: true, message: "forbidden message" });
+        }
+        next();
+    }
+
     // users related api
 
     // step-2: get all users
@@ -254,7 +265,7 @@ async function run() {
     // carts related api
 
     // step-2: getting cart items from mongodb
-    app.get("/carts", verifyJWT, async (req, res) => {
+    app.get("/carts", verifyJWT, verifyStudent,  async (req, res) => {
         const email = req.query.email;
         if (!email) {
           return res.send([]);
@@ -274,6 +285,14 @@ async function run() {
     app.post("/carts", async (req, res) => {
         const item = req.body;
         const result = await cartCollection.insertOne(item);
+        res.send(result);
+    });
+
+    // step-3: delete a class from cart
+    app.delete("/carts/:id", async (req, res) => {
+        const id = req.params.id;
+        const query = { _id: new ObjectId(id) };
+        const result = await cartCollection.deleteOne(query);
         res.send(result);
     });
 
