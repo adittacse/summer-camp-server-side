@@ -172,7 +172,7 @@ async function run() {
       
         const result = await classCollection.find(filter).toArray();
         res.send(result);
-      });
+    });
       
 
     // step-6: getting specific class
@@ -253,12 +253,29 @@ async function run() {
 
     // carts related api
 
+    // step-2: getting cart items from mongodb
+    app.get("/carts", verifyJWT, async (req, res) => {
+        const email = req.query.email;
+        if (!email) {
+          return res.send([]);
+        }
+  
+        const decodedEmail = req.decoded.email;
+        if (email !== decodedEmail) {
+          return res.status(403).send({ message: "Forbidden Access!" });
+        }
+  
+        const query = { email: email };
+        const result = await cartCollection.find(query).toArray();
+        res.send(result);
+    });
+
     // step-1: inserting a class to mongodb (student)
     app.post("/carts", async (req, res) => {
         const item = req.body;
         const result = await cartCollection.insertOne(item);
         res.send(result);
-      });
+    });
 
 
     // Send a ping to confirm a successful connection
