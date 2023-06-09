@@ -163,9 +163,12 @@ async function run() {
 
     // class related api
 
-    // step-2: getting all classes from mongodb to display in client side
+    // step-2: getting all classes from mongodb to display in client side (admin only)
+    // step-7: getting each instructor classes (each instructor only)
     app.get("/class", async (req, res) => {
-        const result = await classCollection.find().toArray();
+        const instructorEmail = req.query.instructorEmail;
+        const filter = instructorEmail ? { instructorEmail } : {};
+        const result = await classCollection.find(filter).toArray();
         res.send(result);
     });
 
