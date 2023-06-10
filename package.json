@@ -75,7 +75,7 @@
     "setprototypeof": "^1.2.0",
     "side-channel": "^1.0.4",
     "statuses": "^2.0.1",
-    "stripe": "^12.8.0",
+    "stripe": "^12.9.0",
     "toidentifier": "^1.0.1",
     "type-is": "^1.6.18",
     "unpipe": "^1.0.0",
