@@ -336,7 +336,7 @@ async function run() {
     // payments related api
 
     // step-3: getting payment history of student from mongodb (descending order)
-    app.get("/payments", verifyJWT, verifyStudent,  async (req, res) => {
+    app.get("/payments", verifyJWT,  async (req, res) => {
         const email = req.query.email;
         if (!email) {
           return res.send([]);
@@ -351,6 +351,25 @@ async function run() {
         const result = await paymentCollection.find(query).sort({ date: -1 }).toArray();
         res.send(result);
     });
+
+    // Step 4: calculating each class id count in payment to set enrolled students
+    app.get("/payments/count", verifyJWT, async (req, res) => {
+        try {
+            const classId = req.query.classId;
+            if (!classId) {
+                return res.status(400).send({ message: "Class ID is required!" });
+            }
+        
+            const query = { classesId: classId };
+            const count = await paymentCollection.countDocuments(query);
+            res.send({ count });
+        } catch (error) {
+            console.error("Error fetching payment count:", error);
+            res.status(500).send({ message: "Internal Server Error" });
+        }
+    });
+  
+
 
     // step-1: create payment intent
     app.post("/create-payment-intent", verifyJWT, async (req, res) => {
