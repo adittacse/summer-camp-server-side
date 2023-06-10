@@ -176,6 +176,35 @@ async function run() {
 
     // class related api
 
+    // step-8: getting specific class
+    // working code
+    // app.get("/class/enrolled", verifyJWT, async (req, res) => {
+    //     const classesId = req.query.classesId;
+        
+    //     if (!Array.isArray(classesId)) {
+    //       return res.status(400).send({ message: "Invalid classesId parameter." });
+    //     }
+      
+    //     const filter = { _id: { $in: classesId.map(id => new ObjectId(id)) } };
+    //     const result = await classCollection.find(filter).toArray();
+    //     res.send(result);
+    // });
+    app.get('/class/enrolled', verifyJWT, async (req, res) => {
+        const classesId = req.query.classesId;
+      
+        let classIds = [];
+        if (typeof classesId === 'string') {
+          classIds = classesId.split(',');
+        } else if (Array.isArray(classesId)) {
+          classIds = classesId;
+        }
+      
+        const filter = { _id: { $in: classIds.map((id) => new ObjectId(id)) } };
+        const result = await classCollection.find(filter).toArray();
+        res.send(result);
+    });                              
+      
+
     // step-2: getting all classes from mongodb to display in client side (admin only)
     // step-7: getting each instructor classes (each instructor only)
     app.get("/class", async (req, res) => {
@@ -188,12 +217,18 @@ async function run() {
       
 
     // step-6: getting specific class
-    app.get("/class/:id", verifyJWT, async (req, res) => {
-        const id = req.params.id;
-        const filter = { _id: new ObjectId(id) };
-        const result = await classCollection.findOne(filter);
-        res.send(result);
-    });
+    // app.get("/class/:id", verifyJWT, async (req, res) => {
+    //     const id = req.params.id;
+    //     const filter = { _id: new ObjectId(id) };
+    //     const result = await classCollection.findOne(filter);
+    //     res.send(result);
+    // });
+    // app.get("/class/:id", verifyJWT, async (req, res) => {
+    //     const id = req.params.id;
+    //     const filter = { _id: new ObjectId(id) };
+    //     const result = await classCollection.findOne(filter);
+    //     res.send(result);
+    // });
 
     // step-1: uploading new class
     app.post("/class", verifyJWT, verifyInstructor, async (req, res) => {
@@ -300,7 +335,7 @@ async function run() {
 
     // payments related api
 
-    // step-3: getting payment history of student from mongodb
+    // step-3: getting payment history of student from mongodb (descending order)
     app.get("/payments", verifyJWT, verifyStudent,  async (req, res) => {
         const email = req.query.email;
         if (!email) {
@@ -332,17 +367,16 @@ async function run() {
         });
     });
 
-    // step-2: 
+    // step-2: inserting payment information with class
     app.post("/payments", verifyJWT, async (req, res) => {
         const payment = req.body;
         const insertResult = await paymentCollection.insertOne(payment);
-  
-        const query = { _id: { $in: payment.cartItems.map(id => new ObjectId(id)) } };
+      
+        const query = { _id: { $in: payment.cartItemsId.map(id => new ObjectId(id)) } };
         const deleteResult = await cartCollection.deleteMany(query);
-  
+      
         res.send({ insertResult, deleteResult });
     });
-    
 
 
     // Send a ping to confirm a successful connection
