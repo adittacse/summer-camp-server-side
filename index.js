@@ -298,7 +298,26 @@ async function run() {
     });
 
 
-    // create payment intent
+    // payments related api
+
+    // step-3: getting payment history of student from mongodb
+    app.get("/payments", verifyJWT, verifyStudent,  async (req, res) => {
+        const email = req.query.email;
+        if (!email) {
+          return res.send([]);
+        }
+  
+        const decodedEmail = req.decoded.email;
+        if (email !== decodedEmail) {
+          return res.status(403).send({ message: "Forbidden Access!" });
+        }
+  
+        const query = { email: email };
+        const result = await paymentCollection.find(query).sort({ date: -1 }).toArray();
+        res.send(result);
+    });
+
+    // step-1: create payment intent
     app.post("/create-payment-intent", verifyJWT, async (req, res) => {
         const { price } = req.body;
         const amount = parseInt(price * 100);
@@ -313,7 +332,7 @@ async function run() {
         });
     });
 
-    // payment related api
+    // step-2: 
     app.post("/payments", verifyJWT, async (req, res) => {
         const payment = req.body;
         const insertResult = await paymentCollection.insertOne(payment);
