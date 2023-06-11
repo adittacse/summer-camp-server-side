@@ -208,32 +208,31 @@ async function run() {
     // step-2: getting all classes from mongodb to display in client side (admin only)
     // step-7: getting each instructor classes (each instructor only)
     app.get("/class", async (req, res) => {
+        const instructorEmail = req.query.instructorEmail;
         const status = req.query.status;
-        const filter = status ? { status } : {};
-      
+        let filter = {};
+        
+        if (instructorEmail) {
+          filter = { instructorEmail, ...(status && { status }) };
+        } else {
+          filter = status ? { status } : {};
+        }
+        
         const result = await classCollection.find(filter).toArray();
         res.send(result);
     });
-      
-
-    // step-6: getting specific class
-    // app.get("/class/:id", verifyJWT, async (req, res) => {
-    //     const id = req.params.id;
-    //     const filter = { _id: new ObjectId(id) };
-    //     const result = await classCollection.findOne(filter);
-    //     res.send(result);
-    // });
-    // app.get("/class/:id", verifyJWT, async (req, res) => {
-    //     const id = req.params.id;
-    //     const filter = { _id: new ObjectId(id) };
-    //     const result = await classCollection.findOne(filter);
-    //     res.send(result);
-    // });
+    
+    // step-6: getting specific class to display
+    app.get("/class/:id", async (req, res) => {
+        const id = req.params.id;
+        const filter = { _id: new ObjectId(id) };
+        const result = await classCollection.findOne(filter);
+        res.send(result);
+    });
 
     // step-1: uploading new class
-    app.post("/class", verifyJWT, verifyInstructor, async (req, res) => {
+    app.post("/class", verifyJWT, async (req, res) => {
         const newClass = req.body;
-        console.log(newClass);
         const result = await classCollection.insertOne(newClass);
         res.send(result);
     });
@@ -301,7 +300,7 @@ async function run() {
     // carts related api
 
     // step-2: getting cart items from mongodb
-    app.get("/carts", verifyJWT, verifyStudent,  async (req, res) => {
+    app.get("/carts", verifyJWT,  async (req, res) => {
         const email = req.query.email;
         if (!email) {
           return res.send([]);
@@ -353,7 +352,7 @@ async function run() {
     });
 
     // Step 4: calculating each class id count in payment to set enrolled students
-    app.get("/payments/count", verifyJWT, async (req, res) => {
+    app.get("/payments/count", async (req, res) => {
         try {
             const classId = req.query.classId;
             if (!classId) {
