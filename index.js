@@ -195,17 +195,6 @@ async function run() {
 
     // step-8: getting specific class
     // working code
-    // app.get("/class/enrolled", verifyJWT, async (req, res) => {
-    //     const classesId = req.query.classesId;
-        
-    //     if (!Array.isArray(classesId)) {
-    //       return res.status(400).send({ message: "Invalid classesId parameter." });
-    //     }
-      
-    //     const filter = { _id: { $in: classesId.map(id => new ObjectId(id)) } };
-    //     const result = await classCollection.find(filter).toArray();
-    //     res.send(result);
-    // });
     app.get('/class/enrolled', verifyJWT, async (req, res) => {
         const classesId = req.query.classesId;
       
@@ -364,32 +353,31 @@ async function run() {
 
 
 
-    // see classes api of an instructor
-    app.get("/classes/:instructorId", async (req, res) => {
+    // see all classes of an instructor
+    app.get('/see-classes/:id', async (req, res) => {
         try {
-          const { instructorId } = req.params;
+          const instructorId = req.params.id;
       
-          // Fetch instructor email from userCollection
-          const user = await userCollection.findOne({ _id: ObjectId(instructorId) });
-          if (!user) {
-            return res.status(404).json({ message: "Instructor not found" });
+          // Find the instructor's email from the userCollection based on their ID
+          const instructor = await userCollection.findOne({ _id: new ObjectId(instructorId) });
+          if (!instructor) {
+            return res.status(404).json({ error: 'Instructor not found' });
           }
+
+          const instructorEmail = instructor.email;
       
-          const instructorEmail = user.email;
-          console.log(instructorEmail);
-      
-          // Fetch all classes from classCollection based on instructor email
+          // Fetch classes from the classCollection that match the instructorEmail
           const classes = await classCollection.find({ instructorEmail }).toArray();
-      
-          res.json(classes);
+          
+          const response = { classes, instructor };
+
+          res.send(response);
         } catch (error) {
-          console.error("Error fetching classes:", error);
-          res.status(500).json({ message: "Internal server error" });
+          console.error(error);
+          res.status(500).json({ error: 'Server error' });
         }
-    });      
-      
-                
-        
+    });
+
 
 
     // payments related api
