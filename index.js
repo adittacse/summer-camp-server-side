@@ -177,6 +177,22 @@ async function run() {
 
     // class related api
 
+    // step-9: display top 6 classes based on students
+    app.get('/classes/top', async (req, res) => {
+        try {
+          // Query the database to get the top 6 classes based on student count
+          const topClasses = await classCollection
+            .find()
+            .sort({ studentCount: -1 })
+            .limit(6)
+            .toArray();
+      
+          res.send(topClasses);
+        } catch (error) {
+          res.status(500).json({ error: 'Internal Server Error' });
+        }
+    });
+
     // step-8: getting specific class
     // working code
     // app.get("/class/enrolled", verifyJWT, async (req, res) => {
