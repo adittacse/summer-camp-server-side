@@ -116,13 +116,14 @@ async function run() {
                 users.map(async (user) => {
                     const totalClasses = await classCollection.countDocuments({ instructorEmail: user.email });
                     const classes = await classCollection.find({ instructorEmail: user.email }).toArray();
+                    const approvedClasses = classes.filter(classItem => classItem.status === "Approved");
                     const classNames = classes.map(eachClass => eachClass.className);
                     return {
                         _id: user._id,
                         name: user.name,
                         email: user.email,
                         image: user.image,
-                        totalClasses,
+                        totalClasses: approvedClasses.length,
                         classNames,
                     };
                 })
