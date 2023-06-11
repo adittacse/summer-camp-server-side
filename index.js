@@ -349,6 +349,23 @@ async function run() {
     });
 
 
+
+    // step-1: display 6 instructors based on students number
+    app.get('/api/instructors', async (req, res) => {
+        try {
+        const instructors = await userCollection.find({ role: 'Instructor' }).toArray();
+    
+            res.send(instructors);
+        } catch (error) {
+            console.error('Error fetching instructors:', error);
+            res.status(500).json({ error: 'Internal Server Error' });
+        }
+    });
+  
+                
+        
+
+
     // payments related api
 
     // step-3: getting payment history of student from mongodb (descending order)
