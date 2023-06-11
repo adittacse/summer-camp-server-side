@@ -361,7 +361,33 @@ async function run() {
             res.status(500).json({ error: 'Internal Server Error' });
         }
     });
-  
+
+
+
+    // see classes api of an instructor
+    app.get("/classes/:instructorId", async (req, res) => {
+        try {
+          const { instructorId } = req.params;
+      
+          // Fetch instructor email from userCollection
+          const user = await userCollection.findOne({ _id: ObjectId(instructorId) });
+          if (!user) {
+            return res.status(404).json({ message: "Instructor not found" });
+          }
+      
+          const instructorEmail = user.email;
+          console.log(instructorEmail);
+      
+          // Fetch all classes from classCollection based on instructor email
+          const classes = await classCollection.find({ instructorEmail }).toArray();
+      
+          res.json(classes);
+        } catch (error) {
+          console.error("Error fetching classes:", error);
+          res.status(500).json({ message: "Internal server error" });
+        }
+    });      
+      
                 
         
 
