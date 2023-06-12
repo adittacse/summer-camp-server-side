@@ -183,7 +183,6 @@ async function run() {
           // Query the database to get the top 6 classes based on student count
           const topClasses = await classCollection
             .find()
-            .sort({ studentCount: -1 })
             .limit(6)
             .toArray();
       
