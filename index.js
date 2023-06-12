@@ -194,13 +194,12 @@ async function run() {
     });
 
     // step-8: getting specific class
-    // working code
     app.get('/class/enrolled', verifyJWT, async (req, res) => {
         const classesId = req.query.classesId;
       
         let classIds = [];
         if (typeof classesId === 'string') {
-          classIds = classesId.split(',');
+          classIds = [classesId]; // Wrap the single string in an array
         } else if (Array.isArray(classesId)) {
           classIds = classesId;
         }
@@ -208,7 +207,8 @@ async function run() {
         const filter = { _id: { $in: classIds.map((id) => new ObjectId(id)) } };
         const result = await classCollection.find(filter).toArray();
         res.send(result);
-    });                              
+    });
+      
       
 
     // step-2: getting all classes from mongodb to display in client side (admin only)
@@ -246,6 +246,18 @@ async function run() {
     // step-3: approving a class
     app.patch("/class/approve/:id", verifyJWT, verifyAdmin, async (req, res) => {
         const id = req.params.id;
+      
+        // Removing/replacing old feedback first
+        const classId = { _id: new ObjectId(id) };
+        const query = await classCollection.findOne(classId);
+        const updateFeedback = {
+          $set: {
+            feedback: ""
+          },
+        };
+        const resultFeedback = await classCollection.updateOne(query, updateFeedback);
+      
+        // Then approve
         const filter = { _id: new ObjectId(id) };
         const updateDoc = {
           $set: {
@@ -253,8 +265,14 @@ async function run() {
           },
         };
         const result = await classCollection.updateOne(filter, updateDoc);
-        res.send(result);
-    });
+      
+        const response = {
+          resultFeedback,
+          result
+        };
+        res.send(response);
+      });
+      
 
     // step-4: deny a class
     app.patch("/class/deny/:id", verifyJWT, verifyAdmin, async (req, res) => {
@@ -407,7 +425,7 @@ async function run() {
                 return res.status(400).send({ message: "Class ID is required!" });
             }
         
-            const query = { classesId: classId };
+            const query = { classId: classId };
             const count = await paymentCollection.countDocuments(query);
             res.send({ count });
         } catch (error) {
@@ -438,7 +456,9 @@ async function run() {
         const payment = req.body;
         const insertResult = await paymentCollection.insertOne(payment);
       
-        const query = { _id: { $in: payment.cartItemsId.map(id => new ObjectId(id)) } };
+        // const query = { _id: { $in: payment.cartItemsId.map(id => new ObjectId(id)) } };
+        const query = { _id: new ObjectId(payment.cartItemId) };
+
         const deleteResult = await cartCollection.deleteMany(query);
       
         res.send({ insertResult, deleteResult });
