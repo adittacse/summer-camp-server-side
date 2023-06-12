@@ -114,7 +114,7 @@ async function run() {
         
             const instructors = await Promise.all(
                 users.map(async (user) => {
-                    const totalClasses = await classCollection.countDocuments({ instructorEmail: user.email });
+                    // const totalClasses = await classCollection.countDocuments({ instructorEmail: user.email });
                     const classes = await classCollection.find({ instructorEmail: user.email }).toArray();
                     const approvedClasses = classes.filter(classItem => classItem.status === "Approved");
                     const classNames = classes.map(eachClass => eachClass.className);
