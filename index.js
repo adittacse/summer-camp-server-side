@@ -177,20 +177,37 @@ async function run() {
 
     // class related api
 
-    // step-9: display top 6 classes based on students
+    // step-9: display top 6 classes based on students number
     app.get('/classes/top', async (req, res) => {
         try {
-          // Query the database to get the top 6 classes based on student count
-          const topClasses = await classCollection
-            .find()
-            .limit(6)
-            .toArray();
+            const classCounts = await paymentCollection.aggregate([
+              {
+                $group: {
+                  _id: '$classId',
+                  studentCount: { $sum: 1 },
+                },
+              },
+              {
+                $sort: {
+                  studentCount: -1,
+                },
+              },
+              {
+                $limit: 6,
+              },
+            ]).toArray();
+        
+            const classIds = classCounts.map((classCount) => new ObjectId(classCount._id));
+        
+            const topClasses = await classCollection.find({ _id: { $in: classIds } }).toArray();
       
-          res.send(topClasses);
+            res.send(topClasses);
         } catch (error) {
-          res.status(500).json({ error: 'Internal Server Error' });
+            res.status(500).json({ error: 'Internal Server Error' });
         }
-    });
+    });    
+
+
 
     // step-8: getting specific class
     app.get('/class/enrolled', verifyJWT, async (req, res) => {
@@ -359,7 +376,7 @@ async function run() {
     // step-1: display 6 instructors based on students number
     app.get('/api/instructors', async (req, res) => {
         try {
-        const instructors = await userCollection.find({ role: 'Instructor' }).toArray();
+            const instructors = await userCollection.find({ role: 'Instructor' }).toArray();
     
             res.send(instructors);
         } catch (error) {
