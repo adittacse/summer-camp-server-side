@@ -207,7 +207,6 @@ async function run() {
         }
     });
 
-
     // step-8: getting specific class
     app.get('/class/enrolled', verifyJWT, async (req, res) => {
         const classesId = req.query.classesId;
@@ -223,8 +222,6 @@ async function run() {
         const result = await classCollection.find(filter).toArray();
         res.send(result);
     });
-      
-      
 
     // step-2: getting all classes from mongodb to display in client side (admin only)
     // step-7: getting each instructor classes (each instructor only)
@@ -373,16 +370,70 @@ async function run() {
 
 
     // step-1: display 6 instructors based on students number
-    app.get('/api/instructors', async (req, res) => {
-        try {
-            const instructors = await userCollection.find({ role: 'Instructor' }).toArray();
+    // working code
+    // app.get('/api/instructors', async (req, res) => {
+    //     try {
+    //         const instructors = await userCollection.find({ role: 'Instructor' }).toArray();
+    //         console.log(instructors);
     
-            res.send(instructors);
-        } catch (error) {
-            console.error('Error fetching instructors:', error);
-            res.status(500).json({ error: 'Internal Server Error' });
-        }
+    //         res.send(instructors);
+    //     } catch (error) {
+    //         console.error('Error fetching instructors:', error);
+    //         res.status(500).json({ error: 'Internal Server Error' });
+    //     }
+    // });
+
+    // step-9: display top 6 classes based on students number
+    app.get('/api/instructors', async (req, res) => {
+      try {
+        const topInstructorCount = 6; // Total number of instructors to retrieve
+    
+        const instructorClassCounts = await paymentCollection.aggregate([
+          {
+            $group: {
+              _id: '$instructorEmail',
+              instructorClassCount: { $sum: 1 },
+            },
+          },
+          {
+            $sort: {
+              instructorClassCount: -1,
+            },
+          },
+          {
+            $limit: topInstructorCount,
+          },
+        ]).toArray();
+    
+        const instructorEmails = instructorClassCounts.map((instructorCount) => instructorCount._id);
+    
+        const topInstructors = await userCollection.find({ email: { $in: instructorEmails } }).toArray();
+    
+        const instructorsWithCount = topInstructors.map((instructor) => {
+          const matchingCount = instructorClassCounts.find((count) => count._id === instructor.email);
+          return {
+            ...instructor,
+            instructorClassCount: matchingCount ? matchingCount.instructorClassCount : 0,
+          };
+        });
+    
+        const sortedInstructors = instructorsWithCount.sort((a, b) => b.instructorClassCount - a.instructorClassCount);
+    
+        const remainingInstructorCount = topInstructorCount - sortedInstructors.length;
+        const remainingInstructors = await userCollection
+          .find({ email: { $nin: instructorEmails } }) // Find instructors not found in paymentCollection
+          .limit(remainingInstructorCount) // Limit to the remaining number of instructors needed
+          .toArray();
+    
+        const finalInstructors = sortedInstructors.concat(remainingInstructors);
+    
+        res.send(finalInstructors);
+      } catch (error) {
+        console.error('Error fetching top instructors:', error);
+        res.status(500).json({ error: 'Internal Server Error' });
+      }
     });
+    
 
 
 
