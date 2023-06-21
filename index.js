@@ -180,33 +180,32 @@ async function run() {
     // step-9: display top 6 classes based on students number
     app.get('/classes/top', async (req, res) => {
         try {
-            const classCounts = await paymentCollection.aggregate([
-              {
-                $group: {
-                  _id: '$classId',
-                  studentCount: { $sum: 1 },
+              const classCounts = await paymentCollection.aggregate([
+                {
+                  $group: {
+                    _id: '$classId',
+                    studentCount: { $sum: 1 },
+                  },
                 },
-              },
-              {
-                $sort: {
-                  studentCount: -1,
+                {
+                  $sort: {
+                    studentCount: -1,
+                  },
                 },
-              },
-              {
-                $limit: 6,
-              },
-            ]).toArray();
+                {
+                  $limit: 6,
+                },
+              ]).toArray();
+          
+              const classIds = classCounts.map((classCount) => new ObjectId(classCount._id));
+          
+              const topClasses = await classCollection.find({ _id: { $in: classIds } }).toArray();
         
-            const classIds = classCounts.map((classCount) => new ObjectId(classCount._id));
-        
-            const topClasses = await classCollection.find({ _id: { $in: classIds } }).toArray();
-      
-            res.send(topClasses);
+              res.send(topClasses);
         } catch (error) {
-            res.status(500).json({ error: 'Internal Server Error' });
+              res.status(500).json({ error: 'Internal Server Error' });
         }
-    });    
-
+    });
 
 
     // step-8: getting specific class
