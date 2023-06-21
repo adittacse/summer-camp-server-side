@@ -200,8 +200,11 @@ async function run() {
               const classIds = classCounts.map((classCount) => new ObjectId(classCount._id));
           
               const topClasses = await classCollection.find({ _id: { $in: classIds } }).toArray();
+
+              // Sort the topClasses array in descending order based on studentCount
+              const sortedClasses = topClasses.sort((a, b) => b.studentCount - a.studentCount);
         
-              res.send(topClasses);
+              res.send(sortedClasses);
         } catch (error) {
               res.status(500).json({ error: 'Internal Server Error' });
         }
@@ -370,20 +373,6 @@ async function run() {
 
 
     // step-1: display 6 instructors based on students number
-    // working code
-    // app.get('/api/instructors', async (req, res) => {
-    //     try {
-    //         const instructors = await userCollection.find({ role: 'Instructor' }).toArray();
-    //         console.log(instructors);
-    
-    //         res.send(instructors);
-    //     } catch (error) {
-    //         console.error('Error fetching instructors:', error);
-    //         res.status(500).json({ error: 'Internal Server Error' });
-    //     }
-    // });
-
-    // step-9: display top 6 classes based on students number
     app.get('/api/instructors', async (req, res) => {
       try {
         const topInstructorCount = 6; // Total number of instructors to retrieve
@@ -410,20 +399,20 @@ async function run() {
         const topInstructors = await userCollection.find({ email: { $in: instructorEmails } }).toArray();
     
         const instructorsWithCount = topInstructors.map((instructor) => {
-          const matchingCount = instructorClassCounts.find((count) => count._id === instructor.email);
-          return {
-            ...instructor,
-            instructorClassCount: matchingCount ? matchingCount.instructorClassCount : 0,
-          };
+            const matchingCount = instructorClassCounts.find((count) => count._id === instructor.email);
+            return {
+              ...instructor,
+              instructorClassCount: matchingCount ? matchingCount.instructorClassCount : 0,
+            };
         });
     
         const sortedInstructors = instructorsWithCount.sort((a, b) => b.instructorClassCount - a.instructorClassCount);
     
         const remainingInstructorCount = topInstructorCount - sortedInstructors.length;
         const remainingInstructors = await userCollection
-          .find({ email: { $nin: instructorEmails } }) // Find instructors not found in paymentCollection
-          .limit(remainingInstructorCount) // Limit to the remaining number of instructors needed
-          .toArray();
+            .find({ email: { $nin: instructorEmails } }) // Find instructors not found in paymentCollection
+            .limit(remainingInstructorCount) // Limit to the remaining number of instructors needed
+            .toArray();
     
         const finalInstructors = sortedInstructors.concat(remainingInstructors);
     
