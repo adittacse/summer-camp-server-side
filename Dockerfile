@@ -5,7 +5,7 @@ FROM node:18
 WORKDIR /app
 
 # Copy the application files into the working directory
-COPY package.json .
+COPY package.json ./app
 
 # Install the application dependencies
 RUN npm install
@@ -13,4 +13,4 @@ RUN npm install
 EXPOSE 5000
 
 # Define the entry point for the container
-CMD ["npm", "start"]
+CMD ["npm", "index.js"]
