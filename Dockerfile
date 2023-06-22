@@ -1,6 +1,6 @@
 # Use the official Node.js image as the base image
 FROM node:18
-# PJnGxnh1nCjWCk7z
+
 # Set the working directory in the container
 WORKDIR /app
 
