@@ -12,7 +12,7 @@ RUN npm install
 
 COPY . .
 
-EXPOSE 3000
+EXPOSE 3001
 
 # Define the entry point for the container
 CMD ["npm", "index.js"]
